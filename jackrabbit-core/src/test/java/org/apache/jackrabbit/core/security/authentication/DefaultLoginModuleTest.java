@@ -40,6 +40,7 @@ import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -67,6 +68,15 @@ public class DefaultLoginModuleTest extends AbstractJCRTest {
             "   <param name=\"anonymousId\" value=\"anonymous\"/>\n" +
             "   <param name=\"adminId\" value=\"admin\"/>\n" +
             "   <param name=\"disableTokenAuth\" value=\"true\"/>\n" +
+            "</LoginModule>" +
+            "</Security>";
+
+    private static final String PRE_AUTH_CONFIG =
+            "<Security appName=\"Jackrabbit\">" +
+            "<LoginModule class=\"org.apache.jackrabbit.core.security.authentication.DefaultLoginModule\">\n" +
+            "   <param name=\"anonymousId\" value=\"anonymous\"/>\n" +
+            "   <param name=\"adminId\" value=\"admin\"/>\n" +
+            "   <param name=\"pre_auth_validator\" value=\"org.apache.jackrabbit.core.security.authentication.SimplePreAuthValidator\"/>\n" +
             "</LoginModule>" +
             "</Security>";
     
@@ -112,6 +122,36 @@ public class DefaultLoginModuleTest extends AbstractJCRTest {
         assertTrue(subject.getPrincipals().isEmpty());
         assertTrue(subject.getPublicCredentials().isEmpty());
         assertTrue(subject.getPublicCredentials(SimpleCredentials.class).isEmpty());
+    }
+
+    public void testPreAuthValidator() throws Exception {
+        SimpleCredentials testCredentials = new SimpleCredentials("admin", "wrongPassword".toCharArray());
+        AuthContext ac = getAuthContext(testCredentials, DEFAULT_CONFIG);
+        try{
+            ac.login();
+            fail("Authentication must have failed with wrong password");
+        }catch(FailedLoginException e){
+            //Ignore
+        }
+
+        String secret = "cafebabe";
+        SimplePreAuthValidator.reset();
+        SimplePreAuthValidator.setSecret(secret);
+
+        //Now the authentication must pass even with wrong password with use of PreAuth
+        SimpleCredentials preAuthCredentials = new SimpleCredentials("admin", "wrongPassword".toCharArray());
+        preAuthCredentials.setAttribute(secret,Boolean.TRUE);
+        AuthContext preAuthAC = getAuthContext(preAuthCredentials, PRE_AUTH_CONFIG);
+
+        preAuthAC.login();
+
+        Subject subject = preAuthAC.getSubject();
+        assertFalse(subject.getPrincipals().isEmpty());
+        assertFalse(subject.getPublicCredentials().isEmpty());
+        assertFalse(subject.getPublicCredentials(SimpleCredentials.class).isEmpty());
+
+        //Init method must be called
+        assertNotNull(SimplePreAuthValidator.getPassedOptions());
     }
 
     public void testTokenCredentialsLoginLogout() throws Exception {

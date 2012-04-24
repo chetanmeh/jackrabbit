@@ -16,17 +16,16 @@
  */
 package org.apache.jackrabbit.core.security.authentication;
 
-import java.io.IOException;
-import java.security.Principal;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
+import org.apache.jackrabbit.core.config.BeanConfig;
+import org.apache.jackrabbit.core.config.LoginModuleConfig;
+import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
+import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.Credentials;
-import javax.jcr.GuestCredentials;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
+import javax.jcr.*;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
@@ -35,14 +34,11 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
-
-import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
-import org.apache.jackrabbit.core.config.LoginModuleConfig;
-import org.apache.jackrabbit.core.security.SecurityConstants;
-import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
-import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.IOException;
+import java.security.Principal;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * <code>AbstractLoginModule</code> provides the means for the common
@@ -75,6 +71,8 @@ public abstract class AbstractLoginModule implements LoginModule {
      */
     private static final String PRE_AUTHENTICATED_ATTRIBUTE_OPTION = "trust_credentials_attribute";
 
+    private static final String PRE_AUTHENTICATED_VALIDATOR_OPTION = "pre_auth_validator";
+
     private String principalProviderClassName;
     private boolean initialized;
 
@@ -90,6 +88,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      */
     private String preAuthAttributeName;
 
+    private PreAuthValidator preAuthValidator;
 
     protected CallbackHandler callbackHandler;
 
@@ -189,6 +188,9 @@ public abstract class AbstractLoginModule implements LoginModule {
                 && preAuthAttributeName.length() == 0) {
                 preAuthAttributeName = null;
             }
+
+            String preAuthValidatorClass = (String) options.get(PRE_AUTHENTICATED_VALIDATOR_OPTION);
+            preAuthValidator = instantiateValidator(preAuthValidatorClass,options);
 
             //log config values for debug
             if (log.isDebugEnabled()) {
@@ -771,8 +773,41 @@ public abstract class AbstractLoginModule implements LoginModule {
      */
     protected boolean isPreAuthenticated(final Credentials creds) {
         final String preAuthAttrName = getPreAuthAttributeName();
-        return preAuthAttrName != null
-            && (creds instanceof SimpleCredentials)
-            && ((SimpleCredentials) creds).getAttribute(preAuthAttrName) != null;
+        if (preAuthAttrName != null) {
+            return (creds instanceof SimpleCredentials)
+                    && ((SimpleCredentials) creds).getAttribute(preAuthAttrName) != null;
+        }
+        if (preAuthValidator != null) {
+            return preAuthValidator.isPreAuthenticated(creds);
+        }
+        return false;
+    }
+
+    private PreAuthValidator instantiateValidator(String preAuthValidatorClass, Map<String, ?> options) {
+        if(preAuthValidatorClass == null){
+            return null;
+        }
+
+        preAuthValidatorClass = preAuthValidatorClass.trim();
+        if(preAuthValidatorClass.length() == 0){
+            return null;
+        }
+
+        try {
+            Class pc = Class.forName(preAuthValidatorClass, true, BeanConfig.getDefaultClassLoader());
+            PreAuthValidator validator = (PreAuthValidator) pc.newInstance();
+            validator.init(options);
+            return validator;
+        } catch (ClassNotFoundException e) {
+            log.warn("Error in instantiating the PreAuthValidator from class "+preAuthValidatorClass,e);
+        } catch (IllegalAccessException e) {
+            log.warn("Error in instantiating the PreAuthValidator from class "+preAuthValidatorClass,e);
+        } catch (InstantiationException e) {
+            log.warn("Error in instantiating the PreAuthValidator from class "+preAuthValidatorClass,e);
+        } catch (ClassCastException e) {
+            log.warn("Error in instantiating the PreAuthValidator from class "+preAuthValidatorClass,e);
+        }
+
+        return null;
     }
 }
