@@ -19,13 +19,14 @@
 
 <!ENTITY % jackrabbit-repository-elements
          "DataSources|Cluster|FileSystem|DataStore|Security|Workspaces|Workspace|Versioning|SearchIndex|RepositoryLockMechanism">
-
+<!ENTITY % class-group "class CDATA #REQUIRED
+  factoryType CDATA #IMPLIED" >
 <!--
     The DataSources element configures the data sources of the repository.
 -->
 <!ELEMENT DataSources (DataSource*)>
 <!ELEMENT DataSource (param*)>
-<!ATTLIST DataSource name CDATA #REQUIRED>
+<!ATTLIST DataSource %class-group; >
 
 <!--
     a virtual file system
@@ -48,7 +49,7 @@
     class implementing the JackrabbitSecurityManager interface
 -->
 <!ELEMENT SecurityManager (WorkspaceAccessManager?,UserManager?,UserIdClass?, param*)>
-<!ATTLIST SecurityManager class CDATA #REQUIRED
+<!ATTLIST SecurityManager %class-group;
                           workspaceName CDATA #IMPLIED>
 
 <!--
@@ -57,7 +58,7 @@
     class implementing the AccessManager interface
 -->
 <!ELEMENT AccessManager (param*)>
-<!ATTLIST AccessManager class CDATA #REQUIRED>
+<!ATTLIST AccessManager %class-group;>
 
 <!--
     generic parameter (name/value pair)
@@ -72,7 +73,7 @@
     non-JAAS environment.
 -->
 <!ELEMENT LoginModule (param*)>
-<!ATTLIST LoginModule class CDATA #REQUIRED>
+<!ATTLIST LoginModule %class-group;>
 
 <!--
     the WorkspaceAccessManager element optionally configures the manager
@@ -82,7 +83,7 @@
     WorkspaceAccessManager interface
 -->
 <!ELEMENT WorkspaceAccessManager EMPTY>
-<!ATTLIST WorkspaceAccessManager class CDATA #REQUIRED>
+<!ATTLIST WorkspaceAccessManager %class-group;>
 
 <!--
     the Workspaces element specifies the physical workspaces root directory
@@ -123,7 +124,7 @@
     FQN of the class implementing the PersistenceManager interface
 -->
 <!ELEMENT PersistenceManager (param*)>
-<!ATTLIST PersistenceManager class CDATA #REQUIRED>
+<!ATTLIST PersistenceManager %class-group;>
 
 <!--
     the SearchIndex element specifies the locaction of the search index
@@ -131,7 +132,7 @@
     FQN of the class implementing the QueryHandler interface.
 -->
 <!ELEMENT SearchIndex (param*,FileSystem?)>
-<!ATTLIST SearchIndex class CDATA #REQUIRED>
+<!ATTLIST SearchIndex %class-group;>
 
 
 <!--
@@ -146,7 +147,7 @@
     The param(s) define implementation specific parameters.
 -->
 <!ELEMENT AccessControlProvider (param*)>
-<!ATTLIST AccessControlProvider class CDATA #REQUIRED>
+<!ATTLIST AccessControlProvider %class-group;>
 
 <!--
     the Versioning element configures the persistence manager
@@ -172,7 +173,7 @@
     Journal interface.
 -->
 <!ELEMENT Journal (param*)>
-<!ATTLIST Journal class CDATA #REQUIRED>
+<!ATTLIST Journal %class-group;>
 
 <!--
     the ISMLocking element configures the locking implementation
@@ -181,7 +182,7 @@
     ISMLocking interface.
 -->
 <!ELEMENT ISMLocking (param*)>
-<!ATTLIST ISMLocking class CDATA #REQUIRED>
+<!ATTLIST ISMLocking %class-group;>
 
 <!--
     the RepositoryLockMechanism element configures the mechanism
@@ -191,7 +192,7 @@
     RepositoryLockMechanism interface.
 -->
 <!ELEMENT RepositoryLockMechanism (param*)>
-<!ATTLIST RepositoryLockMechanism class CDATA #REQUIRED>
+<!ATTLIST RepositoryLockMechanism %class-group;>
 
 <!--
     the DataStore element configures the data store
@@ -199,7 +200,7 @@
     FQN of the class implementing the DataStore interface
 -->
 <!ELEMENT DataStore (param*)>
-<!ATTLIST DataStore class CDATA #REQUIRED>
+<!ATTLIST DataStore %class-group;>
 
 <!--
     The Import element configures how protected items are imported into a
@@ -214,7 +215,7 @@
     The param(s) define implementation specific parameters.
 -->
 <!ELEMENT ProtectedNodeImporter (param*)>
-<!ATTLIST ProtectedNodeImporter class CDATA #REQUIRED>
+<!ATTLIST ProtectedNodeImporter %class-group;>
 
 <!--
     The ProtectedPropertyImporter element configures an importer for protected
@@ -223,7 +224,7 @@
     The param(s) define implementation specific parameters.
 -->
 <!ELEMENT ProtectedPropertyImporter (param*)>
-<!ATTLIST ProtectedPropertyImporter class CDATA #REQUIRED>
+<!ATTLIST ProtectedPropertyImporter %class-group;>
 
 <!--
     The UserManager element configures the user manager implementation that is
@@ -232,7 +233,7 @@
     The param(s) define implementation specific parameters.
 -->
 <!ELEMENT UserManager (param*,AuthorizableAction*)>
-<!ATTLIST UserManager class CDATA #REQUIRED>
+<!ATTLIST UserManager %class-group;>
 
 <!--
    The optional AuthorizableAction element(s) configure additional custom
@@ -241,7 +242,7 @@
    The parameter(s) define the implementation specific configuration.
 -->
 <!ELEMENT AuthorizableAction (param*)>
-<!ATTLIST AuthorizableAction class CDATA #REQUIRED>
+<!ATTLIST AuthorizableAction %class-group;>
 
 
 <!--
@@ -250,4 +251,4 @@
     class implementing the java.security.Principal interface.
 -->
 <!ELEMENT UserIdClass EMPTY>
-<!ATTLIST UserIdClass class CDATA #REQUIRED>
+<!ATTLIST UserIdClass %class-group;>

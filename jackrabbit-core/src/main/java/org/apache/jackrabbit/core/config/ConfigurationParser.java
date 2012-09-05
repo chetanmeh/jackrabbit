@@ -58,6 +58,11 @@ public class ConfigurationParser {
     /** Name of the bean parameter value configuration attribute. */
     public static final String VALUE_ATTRIBUTE = "value";
 
+    /** Name of the bean parameter value configuration attribute. */
+    public static final String FACTORY_ATTRIBUTE = "factoryType";
+
+    private static final String DEFAULT_FACTORY_TYPE  = SimpleBeanFactory.TYPE;
+
     /**
      * The configuration parser variables. These name-value pairs
      * are used to substitute <code>${...}</code> variable references
@@ -109,13 +114,7 @@ public class ConfigurationParser {
         // Bean configuration element
         Element element = getElement(parent, name);
 
-        // Bean implementation class
-        String className = getAttribute(element, CLASS_ATTRIBUTE);
-
-        // Bean properties
-        Properties properties = parseParameters(element);
-
-        return new BeanConfig(className, properties);
+        return parseBeanConfig(element);
     }
 
     /**
@@ -141,11 +140,15 @@ public class ConfigurationParser {
             throws ConfigurationException {
         // Bean implementation class
         String className = getAttribute(element, CLASS_ATTRIBUTE);
+        String factoryType = getAttribute(element, FACTORY_ATTRIBUTE, DEFAULT_FACTORY_TYPE);
 
         // Bean properties
         Properties properties = parseParameters(element);
 
-        return new BeanConfig(className, properties);
+        BeanConfig bc = new BeanConfig(className, properties);
+        bc.setFactoryType(factoryType);
+
+        return bc;
     }
 
     /**
