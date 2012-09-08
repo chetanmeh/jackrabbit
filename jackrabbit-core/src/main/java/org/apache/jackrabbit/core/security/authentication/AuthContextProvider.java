@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.security.authentication;
 
 import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
@@ -26,6 +28,7 @@ import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +42,7 @@ import java.util.Properties;
  * otherwise {@link #getAuthContext} fails with <code>RepositoryException</code>.
  */
 public class AuthContextProvider {
+    private Logger log = LoggerFactory.getLogger(getClass());
 
     private boolean initialized;
 
@@ -58,12 +62,22 @@ public class AuthContextProvider {
     private final String appName;
 
     /**
+     * JAAS config algorithm name
+     */
+    private final String jaasConfigProviderName;
+
+    public AuthContextProvider(String appName, LoginModuleConfig config) {
+         this(appName,null,config);
+    }
+
+    /**
      * @param appName LoginConfig application name used for this instance
      * @param config optional LoginModule-configuration to use without JAAS
      */
-    public AuthContextProvider(String appName, LoginModuleConfig config) {
+    public AuthContextProvider(String appName, String jaasConfigProviderName,LoginModuleConfig config) {
         this.appName = appName;
         this.config = config;
+        this.jaasConfigProviderName = jaasConfigProviderName;
     }
 
     /**
@@ -91,7 +105,7 @@ public class AuthContextProvider {
         if (isLocal()) {
             return new LocalAuthContext(config, cbHandler, subject);
         } else if (isJAAS()) {
-            return new JAASAuthContext(appName, cbHandler, subject);
+            return new JAASAuthContext(appName, jaasConfigProviderName,cbHandler, subject);
         } else {
             throw new RepositoryException("No Login-Configuration");
         }
@@ -149,7 +163,16 @@ public class AuthContextProvider {
         // check if jaas-loginModule or fallback is configured
         Configuration logins = null;
         try {
-            logins = Configuration.getConfiguration();
+            if(jaasConfigProviderName == null){
+                logins = Configuration.getConfiguration();
+            }else{
+                try{
+                   logins = Configuration.getInstance(JAASAuthContext.JAAS_CONFIG_ALGO_NAME,null,jaasConfigProviderName);
+                }catch(NoSuchAlgorithmException nsae){
+                   log.warn("No algorithm with name [{}] registered. JAAS authentication would " +
+                           "be disabled", jaasConfigProviderName);
+                }
+            }
         } catch (Exception e) {
             // means no JAAS configuration file OR no permission to read it
         }

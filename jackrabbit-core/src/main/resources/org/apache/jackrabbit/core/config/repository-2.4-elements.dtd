@@ -35,12 +35,15 @@
 
 <!--
     the Security element specifies the name (appName attribute)
-    of the JAAS configuration app-entry for this repository. 
+    of the JAAS configuration app-entry for this repository.It
+    can also specify the name of the provider used to fetch
+    the JAAS configuration
 
     it also specifies various security related managers to be used.
 -->
 <!ELEMENT Security (SecurityManager?, AccessManager?, LoginModule?)>
-<!ATTLIST Security appName CDATA #REQUIRED>
+<!ATTLIST Security appName CDATA #REQUIRED
+                   jaasConfigProviderName CDATA #IMPLIED >
 
 <!--
     the SecurityManager element configures the general security manager to be

@@ -28,6 +28,11 @@ public class SecurityConfig {
     private final String name;
 
     /**
+     * Name of the provider to be used for fetch JAAS configuration
+     */
+    private final String jaasConfigProviderName;
+
+    /**
      * Repository security manager configuration;
      */
     private final SecurityManagerConfig smc;
@@ -54,7 +59,16 @@ public class SecurityConfig {
             String name,
             SecurityManagerConfig smc,
             AccessManagerConfig amc, LoginModuleConfig lmc) {
+        this(name,null,smc,amc,lmc);
+    }
+
+    public SecurityConfig(
+            String name,
+            String jaasConfigProviderName,
+            SecurityManagerConfig smc,
+            AccessManagerConfig amc, LoginModuleConfig lmc) {
         this.name = name;
+        this.jaasConfigProviderName = jaasConfigProviderName;
         this.smc = smc;
         this.amc = amc;
         this.lmc = lmc;
@@ -68,6 +82,15 @@ public class SecurityConfig {
      */
     public String getAppName() {
         return name;
+    }
+
+    /**
+     * Returns the name of provider used to fetch JAAS config
+     *
+     * @return name of JAAS config provider
+     */
+    public String getJaasConfigProviderName() {
+        return jaasConfigProviderName;
     }
 
     /**

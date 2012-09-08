@@ -167,7 +167,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         LoginModuleConfig loginModConf = config.getLoginModuleConfig();
 
         // build AuthContextProvider based on appName + optional LoginModuleConfig
-        authContextProvider = new AuthContextProvider(config.getAppName(), loginModConf);
+        authContextProvider = new AuthContextProvider(config.getAppName(), config.getJaasConfigProviderName(), loginModConf);
         if (authContextProvider.isLocal()) {
             log.info("init: use Repository Login-Configuration for " + config.getAppName());
         } else if (authContextProvider.isJAAS()) {

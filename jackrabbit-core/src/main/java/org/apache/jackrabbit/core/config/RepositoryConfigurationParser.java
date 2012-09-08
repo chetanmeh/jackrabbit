@@ -151,6 +151,9 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /** Name of the application name configuration attribute. */
     public static final String APP_NAME_ATTRIBUTE = "appName";
 
+    /** Name of the config provider used for fetching JAAS config */
+    public static final String JAAS_CONFIG_PROVIDER_NAME = "jaasConfigProviderName";
+
     /** Name of the workspace containing security data. */
     public static final String WSP_NAME_ATTRIBUTE = "workspaceName";
 
@@ -393,12 +396,13 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     public SecurityConfig parseSecurityConfig(Element security)
             throws ConfigurationException {
         String appName = getAttribute(security, APP_NAME_ATTRIBUTE);
+        String jaasConfigProviderName = getAttribute(security, JAAS_CONFIG_PROVIDER_NAME,null);
 
         SecurityManagerConfig smc = parseSecurityManagerConfig(security);
         AccessManagerConfig amc = parseAccessManagerConfig(security);
         LoginModuleConfig lmc = parseLoginModuleConfig(security);
 
-        return new SecurityConfig(appName, smc, amc, lmc);
+        return new SecurityConfig(appName, jaasConfigProviderName, smc, amc, lmc);
     }
 
     /**

@@ -18,8 +18,11 @@ package org.apache.jackrabbit.core.security.authentication;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 
 /**
  * Implements the common {@link AuthContext} interface for the JAAS environment.
@@ -27,15 +30,24 @@ import javax.security.auth.login.LoginException;
  * @see AuthContext
  */
 public class JAASAuthContext implements AuthContext {
+    /**
+     * Name of the algorithm to use to fetch JAAS Config
+     */
+    public static final String JAAS_CONFIG_ALGO_NAME = "JavaLoginConfig";
 
     private LoginContext context;
 
+
+    protected JAASAuthContext(String appName,CallbackHandler cbHandler,
+                              Subject subject) {
+        this(appName,null,cbHandler,subject);
+    }
     /**
      * @param appName   application name in JAAS Login-Configuration to use
      * @param cbHandler CallbackHandler for login-modules
      * @param subject   to extend authentication
      */
-    protected JAASAuthContext(String appName, CallbackHandler cbHandler,
+    protected JAASAuthContext(String appName, String jaasConfigProviderName,CallbackHandler cbHandler,
                               Subject subject) {
 
         // make sure we are using our own context class loader when we
@@ -44,13 +56,22 @@ public class JAASAuthContext implements AuthContext {
         ClassLoader orig = current.getContextClassLoader();
         try {
             current.setContextClassLoader(JAASAuthContext.class.getClassLoader());
-            if (null == subject) {
+            if(jaasConfigProviderName != null){
+                Configuration config = Configuration.getInstance(JAAS_CONFIG_ALGO_NAME,null,jaasConfigProviderName);
+                context = new LoginContext(appName,subject,cbHandler,config);
+            } else if (null == subject) {
                 context = new LoginContext(appName, cbHandler);
             } else {
                 context = new LoginContext(appName, subject, cbHandler);
             }
         } catch (LoginException e) {
             //all cases it is thrown are checked -> ignore
+        } catch (NoSuchAlgorithmException e) {
+            //TODO Need to check proper response. Currently RepositoryImpl has a catch block for
+            //SecurityException so wrap it as
+            throw new SecurityException(e);
+        } catch (NoSuchProviderException e) {
+            throw new SecurityException(e);
         } finally {
             current.setContextClassLoader(orig);
         }
