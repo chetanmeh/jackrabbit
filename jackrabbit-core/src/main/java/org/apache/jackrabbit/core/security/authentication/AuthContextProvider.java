@@ -28,7 +28,7 @@ import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
-import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -168,8 +168,8 @@ public class AuthContextProvider {
             }else{
                 try{
                    logins = Configuration.getInstance(JAASAuthContext.JAAS_CONFIG_ALGO_NAME,null,jaasConfigProviderName);
-                }catch(NoSuchAlgorithmException nsae){
-                   log.warn("No algorithm with name [{}] registered. JAAS authentication would " +
+                }catch(NoSuchProviderException nspe){
+                   log.warn("No provider with name [{}] registered. JAAS authentication would " +
                            "be disabled", jaasConfigProviderName);
                 }
             }
